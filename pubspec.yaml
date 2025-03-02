@@ -8,15 +8,15 @@ environment:
   sdk: ^3.7.0
 
 dependencies:
+  http: ^1.0.0 # Upgrade http pour flutter map
   flutter:
     sdk: flutter
   mobile_scanner: ^3.0.0 # Pour utiliser la caméra et scanner des codes-barres
-  http: 0.13.6 # Pour faire des requêtes HTTP
   cupertino_icons: ^1.0.8
   table_calendar: ^3.0.8 # Calendrier
   shared_preferences: ^2.0.9 # Calendrier
   audioplayers: 6.2.0
-  #http: ^0.14.0     # Http pour l'api open food fact
+  flutter_map: ^5.0.0 # MAP Flutter => alternative a gg map
   flutter_localizations:
     sdk: flutter
   provider: ^6.0.0

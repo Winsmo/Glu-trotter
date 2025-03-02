@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
+import 'package:latlong2/latlong.dart'; // Pour gérer les coordonnées
 
 class MapPage extends StatelessWidget {
   @override
@@ -10,23 +12,17 @@ class MapPage extends StatelessWidget {
         title: Text('Carte', style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              'La carte n\'est pas disponible pour le moment.',
-              style: TextStyle(fontSize: 18, color: Colors.black),
-            ),
-            SizedBox(height: 20),
-            Image.asset(
-              'assets/logo_app.jpg',
-              width: 250,
-              height: 250,
-              fit: BoxFit.cover,
-            ),
-          ],
+      body: FlutterMap(
+        options: MapOptions(
+          center: LatLng(48.8566, 2.3522), // Centre de la carte (Paris)
+          zoom: 13.0, // Niveau de zoom
         ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.example.app',
+          ),
+        ],
       ),
     );
   }
