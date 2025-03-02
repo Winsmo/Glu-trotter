@@ -172,6 +172,7 @@ class RecipeDetailPage extends StatelessWidget {
   final String description;
 
   RecipeDetailPage({required this.title, required this.imagePath, required this.description});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
