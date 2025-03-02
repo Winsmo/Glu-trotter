@@ -19,6 +19,7 @@ dependencies:
   flutter_map: ^5.0.0 # MAP Flutter => alternative a gg map
   latlong2: ^0.9.0
   geolocator: ^10.0.0
+  image_picker: ^0.8.7+4 # Ajoutez cette ligne
   flutter_localizations:
     sdk: flutter
   provider: ^6.0.0
