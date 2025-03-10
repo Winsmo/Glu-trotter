@@ -59,6 +59,8 @@ class _RecipesPageState extends State<RecipesPage> {
   ];
 
   Set<String> likedRecipes = {};
+  String searchQuery = "";
+  bool isSearching = false;
 
   @override
   void initState() {
@@ -128,13 +130,43 @@ class _RecipesPageState extends State<RecipesPage> {
 
   @override
   Widget build(BuildContext context) {
+    final filteredRecipes = recipes.where((recipe) {
+      return recipe['title']!.toLowerCase().contains(searchQuery.toLowerCase());
+    }).toList();
+
     return Scaffold(
       backgroundColor: Colors.grey[300],
       appBar: AppBar(
         backgroundColor: Colors.grey[400],
-        title: Text('Recettes', style: TextStyle(color: Colors.white)),
+        title: isSearching
+            ? TextField(
+          decoration: InputDecoration(
+            hintText: 'Rechercher une recette...',
+            hintStyle: TextStyle(color: Colors.white70),
+            border: InputBorder.none,
+          ),
+          style: TextStyle(color: Colors.white),
+          autofocus: true,
+          onChanged: (value) {
+            setState(() {
+              searchQuery = value;
+            });
+          },
+        )
+            : Text('Recettes'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: Icon(isSearching ? Icons.close : Icons.search, color: Colors.white),
+            onPressed: () {
+              setState(() {
+                isSearching = !isSearching;
+                if (!isSearching) {
+                  searchQuery = "";
+                }
+              });
+            },
+          ),
           IconButton(
             icon: Icon(Icons.favorite, color: Colors.red),
             onPressed: () {
@@ -151,9 +183,9 @@ class _RecipesPageState extends State<RecipesPage> {
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: ListView.builder(
-          itemCount: recipes.length,
+          itemCount: filteredRecipes.length,
           itemBuilder: (context, index) {
-            final recipe = recipes[index];
+            final recipe = filteredRecipes[index];
             final isLiked = likedRecipes.contains(recipe['title']);
             return GestureDetector(
               onTap: () {
