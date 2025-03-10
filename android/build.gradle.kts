@@ -1,3 +1,14 @@
+buildscript {
+    repositories {
+        google()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("com.android.tools.build:gradle:7.3.1") // Version de Gradle pour Android
+        classpath("com.google.gms:google-services:4.3.15") // Ajoutez cette ligne pour Firebase
+    }
+}
+
 allprojects {
     repositories {
         google()
@@ -12,6 +23,7 @@ subprojects {
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
+
 subprojects {
     project.evaluationDependsOn(":app")
 }

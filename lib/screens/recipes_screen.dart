@@ -9,7 +9,12 @@ void main() {
   ));
 }
 
-class RecipesPage extends StatelessWidget {
+class RecipesPage extends StatefulWidget {
+  @override
+  _RecipesPageState createState() => _RecipesPageState();
+}
+
+class _RecipesPageState extends State<RecipesPage> {
   final List<Map<String, String>> recipes = [
     {
       "title": "Pâtes Carbonara",
@@ -52,6 +57,34 @@ class RecipesPage extends StatelessWidget {
       "description": "Crêpes Sucrées sans gluten\n\nIngrédients:\n- 200g farine sans gluten\n- 3 œufs\n- 500ml lait\n- 2 cuillères à soupe de sucre\n- 1 pincée de sel\n- beurre pour la cuisson\n\nÉtapes:\nDans un grand bol, mélanger la farine sans gluten, les œufs, le lait, le sucre et une pincée de sel jusqu'à obtenir une pâte lisse et sans grumeaux. Laisser reposer la pâte 30 minutes. Faire chauffer une poêle légèrement huilée et y verser une louche de pâte. Cuire jusqu'à ce que les bords se décollent, puis retourner la crêpe et cuire encore une minute. Servir avec du sucre, de la confiture ou du chocolat fondu."
     }
   ];
+
+  Set<String> likedRecipes = {};
+
+  @override
+  void initState() {
+    super.initState();
+    _loadLikedRecipes();
+  }
+
+  Future<void> _loadLikedRecipes() async {
+    final prefs = await SharedPreferences.getInstance();
+    final likedRecipesJson = prefs.getString('likedRecipes') ?? '[]';
+    setState(() {
+      likedRecipes = Set<String>.from(json.decode(likedRecipesJson));
+    });
+  }
+
+  Future<void> _toggleLike(String title) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      if (likedRecipes.contains(title)) {
+        likedRecipes.remove(title);
+      } else {
+        likedRecipes.add(title);
+      }
+    });
+    await prefs.setString('likedRecipes', json.encode(likedRecipes.toList()));
+  }
 
   Future<void> _addRecipeToCalendar(BuildContext context, String title, String description) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -101,21 +134,36 @@ class RecipesPage extends StatelessWidget {
         backgroundColor: Colors.grey[400],
         title: Text('Recettes', style: TextStyle(color: Colors.white)),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: Icon(Icons.favorite, color: Colors.red),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => LikedRecipesPage(likedRecipes: likedRecipes.toList(), recipes: recipes),
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(10.0),
         child: ListView.builder(
           itemCount: recipes.length,
           itemBuilder: (context, index) {
+            final recipe = recipes[index];
+            final isLiked = likedRecipes.contains(recipe['title']);
             return GestureDetector(
               onTap: () {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
                     builder: (context) => RecipeDetailPage(
-                      title: recipes[index]['title']!,
-                      imagePath: recipes[index]['image']!,
-                      description: recipes[index]['description']!,
+                      title: recipe['title']!,
+                      imagePath: recipe['image']!,
+                      description: recipe['description']!,
                     ),
                   ),
                 );
@@ -130,7 +178,7 @@ class RecipesPage extends StatelessWidget {
                     IconButton(
                       icon: Icon(Icons.add, color: Colors.orange),
                       onPressed: () {
-                        _addRecipeToCalendar(context, recipes[index]['title']!, recipes[index]['description']!);
+                        _addRecipeToCalendar(context, recipe['title']!, recipe['description']!);
                       },
                     ),
                     ClipRRect(
@@ -139,7 +187,7 @@ class RecipesPage extends StatelessWidget {
                         bottomLeft: Radius.circular(15),
                       ),
                       child: Image.asset(
-                        recipes[index]['image']!,
+                        recipe['image']!,
                         width: 100,
                         height: 100,
                         fit: BoxFit.cover,
@@ -149,9 +197,24 @@ class RecipesPage extends StatelessWidget {
                     Expanded(
                       child: Padding(
                         padding: const EdgeInsets.all(8.0),
-                        child: Text(
-                          recipes[index]['title']!,
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                recipe['title']!,
+                                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ),
+                            IconButton(
+                              icon: Icon(
+                                isLiked ? Icons.favorite : Icons.favorite_border,
+                                color: isLiked ? Colors.red : Colors.grey,
+                              ),
+                              onPressed: () {
+                                _toggleLike(recipe['title']!);
+                              },
+                            ),
+                          ],
                         ),
                       ),
                     ),
@@ -161,6 +224,77 @@ class RecipesPage extends StatelessWidget {
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class LikedRecipesPage extends StatelessWidget {
+  final List<String> likedRecipes;
+  final List<Map<String, String>> recipes;
+
+  LikedRecipesPage({required this.likedRecipes, required this.recipes});
+
+  @override
+  Widget build(BuildContext context) {
+    final likedRecipesList = recipes.where((recipe) => likedRecipes.contains(recipe['title'])).toList();
+
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('Recettes Likées'),
+        backgroundColor: Colors.grey[400],
+      ),
+      body: ListView.builder(
+        itemCount: likedRecipesList.length,
+        itemBuilder: (context, index) {
+          final recipe = likedRecipesList[index];
+          return GestureDetector(
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => RecipeDetailPage(
+                    title: recipe['title']!,
+                    imagePath: recipe['image']!,
+                    description: recipe['description']!,
+                  ),
+                ),
+              );
+            },
+            child: Card(
+              margin: EdgeInsets.symmetric(vertical: 8),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15),
+              ),
+              child: Row(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(15),
+                      bottomLeft: Radius.circular(15),
+                    ),
+                    child: Image.asset(
+                      recipe['image']!,
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text(
+                        recipe['title']!,
+                        style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        },
       ),
     );
   }

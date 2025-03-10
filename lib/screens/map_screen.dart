@@ -4,8 +4,6 @@ import 'package:latlong2/latlong.dart';
 import 'package:geolocator/geolocator.dart'; // Pour la localisation
 import 'package:http/http.dart' as http; // Pour les requêtes HTTP
 import 'dart:convert'; // Pour décoder les réponses JSON
-import 'package:image_picker/image_picker.dart'; // Pour sélectionner une photo
-import 'dart:io'; // Pour gérer les fichiers image
 
 class MapPage extends StatefulWidget {
   @override
@@ -15,15 +13,9 @@ class MapPage extends StatefulWidget {
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController(); // Contrôleur pour la carte
   final TextEditingController _searchController = TextEditingController(); // Contrôleur pour le champ de recherche
-  final TextEditingController _nameController = TextEditingController(); // Contrôleur pour le nom du lieu
-  final TextEditingController _descriptionController = TextEditingController(); // Contrôleur pour la description du lieu
   LatLng _center = LatLng(48.8566, 2.3522); // Centre initial de la carte (Paris)
   bool _isLoading = true; // Indicateur de chargement
   List<LatLng> _searchMarkers = []; // Liste des marqueurs pour les résultats de recherche
-  List<Map<String, dynamic>> _customMarkers = []; // Liste des marqueurs personnalisés
-  File? _selectedImage; // Image sélectionnée pour le lieu
-  LatLng? _selectedLocation; // Emplacement sélectionné manuellement
-  bool _isSelectingLocation = false; // Indique si l'utilisateur est en train de sélectionner un emplacement
 
   @override
   void initState() {
@@ -111,126 +103,6 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  // Fonction pour sélectionner une photo
-  Future<void> _pickImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _selectedImage = File(pickedFile.path);
-      });
-    }
-  }
-
-  // Fonction pour ajouter un lieu personnalisé
-  void _addCustomPlace() {
-    if (_nameController.text.isEmpty || _selectedLocation == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Veuillez remplir le nom et sélectionner un emplacement')),
-      );
-      return;
-    }
-
-    setState(() {
-      _customMarkers.add({
-        'position': _selectedLocation!, // Position sélectionnée
-        'name': _nameController.text,
-        'description': _descriptionController.text,
-        'image': _selectedImage,
-      });
-      _nameController.clear();
-      _descriptionController.clear();
-      _selectedImage = null;
-      _selectedLocation = null;
-      _isSelectingLocation = false; // Désactiver la sélection d'emplacement
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Lieu ajouté avec succès')),
-    );
-  }
-
-  // Fonction pour afficher le formulaire d'ajout de lieu
-  void _showAddPlaceDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text('Ajouter un lieu'),
-          content: SingleChildScrollView(
-            child: Column(
-              children: [
-                Text('Cliquez sur la carte pour sélectionner un emplacement'),
-                SizedBox(height: 10),
-                TextField(
-                  controller: _nameController,
-                  decoration: InputDecoration(labelText: 'Nom du lieu'),
-                ),
-                TextField(
-                  controller: _descriptionController,
-                  decoration: InputDecoration(labelText: 'Description (facultatif)'),
-                ),
-                SizedBox(height: 10),
-                _selectedImage != null
-                    ? Image.file(_selectedImage!, height: 100)
-                    : Text('Aucune image sélectionnée'),
-                TextButton(
-                  onPressed: _pickImage,
-                  child: Text('Sélectionner une photo (facultatif)'),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.pop(context);
-              },
-              child: Text('Annuler'),
-            ),
-            TextButton(
-              onPressed: () {
-                _addCustomPlace();
-                Navigator.pop(context);
-              },
-              child: Text('Ajouter'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Fonction pour afficher les détails d'un lieu
-  void _showPlaceDetails(Map<String, dynamic> place) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => Scaffold(
-          appBar: AppBar(
-            title: Text(place['name']),
-          ),
-          body: SingleChildScrollView(
-            padding: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (place['image'] != null)
-                  Image.file(place['image'], height: 200, width: double.infinity, fit: BoxFit.cover),
-                SizedBox(height: 16),
-                Text('Nom: ${place['name']}', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
-                SizedBox(height: 8),
-                if (place['description'] != null && place['description'].isNotEmpty)
-                  Text('Description: ${place['description']}', style: TextStyle(fontSize: 16)),
-                SizedBox(height: 8),
-                Text('Coordonnées: ${place['position'].latitude}, ${place['position'].longitude}', style: TextStyle(fontSize: 16)),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -239,17 +111,6 @@ class _MapPageState extends State<MapPage> {
         backgroundColor: Colors.grey[400],
         title: Text('Carte', style: TextStyle(color: Colors.white)),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: Icon(Icons.add),
-            onPressed: () {
-              setState(() {
-                _isSelectingLocation = true; // Activer la sélection d'emplacement
-              });
-              _showAddPlaceDialog(); // Afficher le formulaire d'ajout de lieu
-            },
-          ),
-        ],
       ),
       body: Column(
         children: [
@@ -280,13 +141,6 @@ class _MapPageState extends State<MapPage> {
                 zoom: 13.0, // Niveau de zoom initial
                 minZoom: 5.0, // Zoom minimum pour éviter que la carte ne disparaisse
                 maxZoom: 18.0, // Zoom maximum pour éviter que la carte ne disparaisse
-                onTap: (tapPosition, latLng) {
-                  if (_isSelectingLocation) {
-                    setState(() {
-                      _selectedLocation = latLng; // Enregistrer l'emplacement sélectionné
-                    });
-                  }
-                },
               ),
               children: [
                 TileLayer(
@@ -311,30 +165,6 @@ class _MapPageState extends State<MapPage> {
                     );
                   }).toList(),
                 ),
-                // Marqueurs personnalisés
-                MarkerLayer(
-                  markers: _customMarkers.map((marker) {
-                    return Marker(
-                      point: marker['position'],
-                      builder: (context) => IconButton(
-                        icon: Icon(Icons.place, color: Colors.purple, size: 40),
-                        onPressed: () {
-                          _showPlaceDetails(marker); // Afficher les détails du lieu
-                        },
-                      ),
-                    );
-                  }).toList(),
-                ),
-                // Marqueur pour l'emplacement sélectionné manuellement
-                if (_selectedLocation != null)
-                  MarkerLayer(
-                    markers: [
-                      Marker(
-                        point: _selectedLocation!,
-                        builder: (context) => Icon(Icons.location_on, color: Colors.orange, size: 40),
-                      ),
-                    ],
-                  ),
               ],
             ),
           ),
