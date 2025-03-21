@@ -58,6 +58,7 @@ flutter:
     - assets/mousse.jpg
     - assets/crepes.jpg
     - assets/music.mp3
+    - assets/google_logo.jpg
 
 flutter_icons:
   android: true

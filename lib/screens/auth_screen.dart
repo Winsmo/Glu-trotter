@@ -24,7 +24,7 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     } on FirebaseAuthException catch (e) {
       setState(() {
-        errorMessage = e.message;
+        errorMessage = e.message ?? 'Une erreur s\'est produite.';
       });
     }
   }
@@ -37,7 +37,21 @@ class _AuthScreenState extends State<AuthScreen> {
       );
     } on FirebaseAuthException catch (e) {
       setState(() {
-        errorMessage = e.message;
+        errorMessage = e.message ?? 'Une erreur s\'est produite.';
+      });
+    }
+  }
+
+  Future<void> signInWithGoogle() async {
+    try {
+      await Auth().signInWithGoogle();
+    } on FirebaseAuthException catch (e) {
+      setState(() {
+        errorMessage = e.message ?? 'Une erreur s\'est produite avec Google.';
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = 'Une erreur inattendue s\'est produite.';
       });
     }
   }
@@ -50,13 +64,38 @@ class _AuthScreenState extends State<AuthScreen> {
   }
 
   Widget _errorMessage() {
-    return Text(errorMessage == '' ? '' : 'Hmm? $errorMessage');
+    return Text(
+      errorMessage == '' ? '' : 'Erreur : $errorMessage',
+      style: TextStyle(color: Colors.red),
+    );
   }
 
   Widget _submitButton() {
     return ElevatedButton(
-      onPressed: isLogin ? signInWithEmailAndPassword : createUserWithEmailAndPassword,
-      child: Text(isLogin ? 'Login' : 'Register'),
+      onPressed:
+      isLogin ? signInWithEmailAndPassword : createUserWithEmailAndPassword,
+      child: Text(isLogin ? 'Connexion' : 'Inscription'),
+    );
+  }
+
+  Widget _googleSignInButton() {
+    return ElevatedButton(
+      onPressed: signInWithGoogle,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black,
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Image.asset(
+            'assets/google_logo.jpg', // Assurez-vous d'avoir une image Google dans vos assets
+            height: 24,
+          ),
+          SizedBox(width: 10),
+          Text('Se connecter avec Google'),
+        ],
+      ),
     );
   }
 
@@ -67,23 +106,25 @@ class _AuthScreenState extends State<AuthScreen> {
           isLogin = !isLogin;
         });
       },
-      child: Text(isLogin ? 'Register instead' : 'Login instead'),
+      child: Text(isLogin ? 'Créer un compte' : 'J\'ai déjà un compte'),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Firebase Auth')),
+      appBar: AppBar(title: const Text('Authentification')),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             _entryField('Email', _controllerEmail),
-            _entryField('Password', _controllerPassword),
+            _entryField('Mot de passe', _controllerPassword),
             _errorMessage(),
             _submitButton(),
+            SizedBox(height: 20),
+            _googleSignInButton(),
             _toggleAuthMode(),
           ],
         ),
