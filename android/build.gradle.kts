@@ -1,11 +1,15 @@
+plugins {
+    // Ajout du plugin Google Services à la version recommandée par Firebase
+    id("com.google.gms.google-services") version "4.3.15" apply false
+}
+
 buildscript {
     repositories {
         google()
         mavenCentral()
     }
     dependencies {
-        classpath("com.android.tools.build:gradle:7.3.1") // Version de Gradle pour Android
-        classpath("com.google.gms:google-services:4.3.15") // Ajoutez cette ligne pour Firebase
+        classpath("com.android.tools.build:gradle:8.1.1") // Dernière version stable
     }
 }
 

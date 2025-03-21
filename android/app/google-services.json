@@ -1,26 +1,43 @@
 {
   "project_info": {
-    "project_number": "61170064870",
-    "project_id": "glu-trotter-373cf",
-    "storage_bucket": "glu-trotter-373cf.firebasestorage.app"
+    "project_number": "993319756555",
+    "project_id": "glu-trotter-922e7",
+    "storage_bucket": "glu-trotter-922e7.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:61170064870:android:80f295f52b353be7568a27",
+        "mobilesdk_app_id": "1:993319756555:android:30c1fb7c6c3c70faacb80e",
         "android_client_info": {
           "package_name": "com.example.glu_trotter"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "993319756555-a3krdnu79ki4760j84tjjr8np951neo5.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
-          "current_key": "AIzaSyAnjAb-39QTw7tRCKumnRTe6NeozkcdQKM"
+          "current_key": "AIzaSyACqifDzQDi42ig_JgeWdTBvXT_htrwJfY"
         }
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "993319756555-a3krdnu79ki4760j84tjjr8np951neo5.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "993319756555-d2kv2d7qgj2gnj9nfku20mve4ltirrra.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.gluTrotter"
+              }
+            }
+          ]
         }
       }
     }

@@ -5,35 +5,45 @@ publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ^3.7.0
+  sdk: ">=3.7.0 <4.0.0"
 
 dependencies:
-  http: ^1.0.0 # Upgrade http pour flutter map
   flutter:
     sdk: flutter
-  mobile_scanner: ^3.0.0 # Pour utiliser la caméra et scanner des codes-barres
-  cupertino_icons: ^1.0.8
-  table_calendar: ^3.0.8 # Calendrier
-  shared_preferences: ^2.0.9 # Calendrier
-  audioplayers: 6.2.0
-  flutter_map: ^5.0.0 # MAP Flutter => alternative a gg map
+
+  # 🔥 Firebase dependencies
+  firebase_core: ^3.12.1
+  firebase_auth: ^5.5.1
+  cloud_firestore: ^5.6.5
+  firebase_storage: ^12.4.4  # (Ajout si besoin de stockage Firebase)
+
+  # 📍 Localisation et Cartes
+  flutter_map: ^8.1.1  # MAP Flutter (alternative à Google Maps)
   latlong2: ^0.9.0
-  geolocator: ^10.0.0
-  image_picker: ^0.8.7+4 # Ajoutez cette ligne
-  firebase_core: ^2.15.0  # Pour Firebase  BDD
-  cloud_firestore: ^4.8.0 # Pour Firestore
+  geolocator: ^13.0.2  # 🔥 Correction de la version pour éviter les conflits
+
+  # 📸 Image & Camera
+  image_picker: ^1.1.2
+  mobile_scanner: ^6.0.7  # Scanner des codes-barres
+
+  # 🗓️ Utilitaires
+  google_sign_in: ^6.1.5
+  shared_preferences: ^2.2.2  # 🔥 Mise à jour
+  table_calendar: ^3.0.8
+  provider: ^6.1.2  # 🔥 Downgradé pour éviter l'erreur
+  http: ^1.0.0
+  audioplayers: ^6.4.0
+  cupertino_icons: ^1.0.8
   flutter_localizations:
     sdk: flutter
-  provider: ^6.0.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^5.0.0
 
-  # Ajout du package pour la gestion des icônes d'application
-  flutter_launcher_icons: ^0.10.0
+  # 📌 Icônes personnalisées pour l'application
+  flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
@@ -53,4 +63,3 @@ flutter_icons:
   android: true
   ios: true
   image_path: "assets/logo_app.jpg"
-

@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import '../models/auth.dart';
+
 import 'scan_screen.dart';
 import 'calendar_screen.dart';
 import 'settings_screen.dart';
@@ -20,19 +23,28 @@ class _HomeScreenState extends State<HomeScreen> {
       _selectedIndex = index;
       _pageController.animateToPage(
         index,
-        duration: Duration(milliseconds: 300),
+        duration: const Duration(milliseconds: 300),
         curve: Curves.easeInOut,
       );
     });
   }
 
+  Future<void> _signOut() async {
+    await Auth().signOut();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final User? user = Auth().currentUser;
+
     return Scaffold(
       backgroundColor: Colors.grey[300],
       appBar: AppBar(
         backgroundColor: Colors.grey[400],
-        title: Text('GluTrotter', style: TextStyle(color: Colors.white)),
+        title: Text(
+          'GluTrotter',
+          style: TextStyle(color: Colors.white),
+        ),
         centerTitle: true,
         leading: IconButton(
           icon: Icon(Icons.wechat, color: Colors.black),
@@ -53,6 +65,10 @@ class _HomeScreenState extends State<HomeScreen> {
               );
             },
           ),
+          IconButton(
+            icon: Icon(Icons.logout, color: Colors.black),
+            onPressed: _signOut,
+          ),
         ],
       ),
       body: PageView(
@@ -65,7 +81,7 @@ class _HomeScreenState extends State<HomeScreen> {
         children: [
           RecipesPage(),
           ScanPage(),
-          HomePage(),
+          HomePage(user: user),
           MapPage(),
           CalendarPage(),
         ],
@@ -79,13 +95,13 @@ class _HomeScreenState extends State<HomeScreen> {
           unselectedItemColor: Colors.black,
           currentIndex: _selectedIndex,
           onTap: _onItemTapped,
-          items: [
+          items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.restaurant),
               label: 'Recettes',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.barcode_reader),
+              icon: Icon(Icons.qr_code),
               label: 'Scan',
             ),
             BottomNavigationBarItem(
@@ -108,6 +124,10 @@ class _HomeScreenState extends State<HomeScreen> {
 }
 
 class HomePage extends StatelessWidget {
+  final User? user;
+
+  const HomePage({Key? key, this.user}) : super(key: key);
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -132,6 +152,12 @@ class HomePage extends StatelessWidget {
               width: 250,
               height: 250,
               fit: BoxFit.cover,
+            ),
+            SizedBox(height: 20),
+            Text(
+              user != null ? "Connecté en tant que :\n${user!.email}" : "Non connecté",
+              style: TextStyle(fontSize: 16, color: Colors.black),
+              textAlign: TextAlign.center,
             ),
           ],
         ),

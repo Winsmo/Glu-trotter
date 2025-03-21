@@ -1,42 +1,45 @@
-# Project-level configuration.
+# Spécifiez la version minimale de CMake requise
 cmake_minimum_required(VERSION 3.14)
+
+# Définissez le nom du projet et les langages utilisés
 project(glu_trotter LANGUAGES CXX)
 
-# The name of the executable created for the application. Change this to change
-# the on-disk name of your application.
+# Le nom de l'exécutable créé pour l'application. Changez ceci pour modifier
+# le nom sur le disque de votre application.
 set(BINARY_NAME "glu_trotter")
 
-# Explicitly opt in to modern CMake behaviors to avoid warnings with recent
-# versions of CMake.
+# Optez explicitement pour les comportements modernes de CMake pour éviter les avertissements
+# avec les versions récentes de CMake.
 cmake_policy(VERSION 3.14...3.25)
 
-# Define build configuration option.
+# Définissez les options de configuration de build
 get_property(IS_MULTICONFIG GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(IS_MULTICONFIG)
   set(CMAKE_CONFIGURATION_TYPES "Debug;Profile;Release"
-    CACHE STRING "" FORCE)
+          CACHE STRING "" FORCE)
 else()
   if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set(CMAKE_BUILD_TYPE "Debug" CACHE
-      STRING "Flutter build mode" FORCE)
+            STRING "Flutter build mode" FORCE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS
-      "Debug" "Profile" "Release")
+            "Debug" "Profile" "Release")
   endif()
 endif()
-# Define settings for the Profile build mode.
+
+# Définissez les paramètres pour le mode de build "Profile"
 set(CMAKE_EXE_LINKER_FLAGS_PROFILE "${CMAKE_EXE_LINKER_FLAGS_RELEASE}")
 set(CMAKE_SHARED_LINKER_FLAGS_PROFILE "${CMAKE_SHARED_LINKER_FLAGS_RELEASE}")
 set(CMAKE_C_FLAGS_PROFILE "${CMAKE_C_FLAGS_RELEASE}")
 set(CMAKE_CXX_FLAGS_PROFILE "${CMAKE_CXX_FLAGS_RELEASE}")
 
-# Use Unicode for all projects.
+# Utilisez Unicode pour tous les projets
 add_definitions(-DUNICODE -D_UNICODE)
 
-# Compilation settings that should be applied to most targets.
+# Paramètres de compilation qui doivent être appliqués à la plupart des cibles
 #
-# Be cautious about adding new options here, as plugins use this function by
-# default. In most cases, you should add new options to specific targets instead
-# of modifying this function.
+# Soyez prudent lors de l'ajout de nouvelles options ici, car les plugins utilisent cette fonction
+# par défaut. Dans la plupart des cas, vous devriez ajouter de nouvelles options à des cibles spécifiques
+# au lieu de modifier cette fonction.
 function(APPLY_STANDARD_SETTINGS TARGET)
   target_compile_features(${TARGET} PUBLIC cxx_std_17)
   target_compile_options(${TARGET} PRIVATE /W4 /WX /wd"4100")
@@ -45,25 +48,24 @@ function(APPLY_STANDARD_SETTINGS TARGET)
   target_compile_definitions(${TARGET} PRIVATE "$<$<CONFIG:Debug>:_DEBUG>")
 endfunction()
 
-# Flutter library and tool build rules.
+# Règles de build pour la bibliothèque et les outils Flutter
 set(FLUTTER_MANAGED_DIR "${CMAKE_CURRENT_SOURCE_DIR}/flutter")
 add_subdirectory(${FLUTTER_MANAGED_DIR})
 
-# Application build; see runner/CMakeLists.txt.
+# Build de l'application ; voir runner/CMakeLists.txt
 add_subdirectory("runner")
 
-
-# Generated plugin build rules, which manage building the plugins and adding
-# them to the application.
+# Règles de build générées pour les plugins, qui gèrent la construction des plugins
+# et leur ajout à l'application
 include(flutter/generated_plugins.cmake)
 
-
 # === Installation ===
-# Support files are copied into place next to the executable, so that it can
-# run in place. This is done instead of making a separate bundle (as on Linux)
-# so that building and running from within Visual Studio will work.
+# Les fichiers de support sont copiés à côté de l'exécutable, afin qu'il puisse
+# s'exécuter sur place. Cela est fait au lieu de créer un bundle séparé (comme sur Linux)
+# pour que la construction et l'exécution depuis Visual Studio fonctionnent.
 set(BUILD_BUNDLE_DIR "$<TARGET_FILE_DIR:${BINARY_NAME}>")
-# Make the "install" step default, as it's required to run.
+
+# Faites de l'étape "install" la valeur par défaut, car elle est requise pour l'exécution
 set(CMAKE_VS_INCLUDE_INSTALL_TO_DEFAULT_BUILD 1)
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
   set(CMAKE_INSTALL_PREFIX "${BUILD_BUNDLE_DIR}" CACHE PATH "..." FORCE)
@@ -73,36 +75,36 @@ set(INSTALL_BUNDLE_DATA_DIR "${CMAKE_INSTALL_PREFIX}/data")
 set(INSTALL_BUNDLE_LIB_DIR "${CMAKE_INSTALL_PREFIX}")
 
 install(TARGETS ${BINARY_NAME} RUNTIME DESTINATION "${CMAKE_INSTALL_PREFIX}"
-  COMPONENT Runtime)
+        COMPONENT Runtime)
 
 install(FILES "${FLUTTER_ICU_DATA_FILE}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
-  COMPONENT Runtime)
+        COMPONENT Runtime)
 
 install(FILES "${FLUTTER_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
-  COMPONENT Runtime)
+        COMPONENT Runtime)
 
 if(PLUGIN_BUNDLED_LIBRARIES)
   install(FILES "${PLUGIN_BUNDLED_LIBRARIES}"
-    DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
-    COMPONENT Runtime)
+          DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+          COMPONENT Runtime)
 endif()
 
-# Copy the native assets provided by the build.dart from all packages.
+# Copiez les ressources natives fournies par build.dart depuis tous les packages
 set(NATIVE_ASSETS_DIR "${PROJECT_BUILD_DIR}native_assets/windows/")
 install(DIRECTORY "${NATIVE_ASSETS_DIR}"
-   DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
-   COMPONENT Runtime)
+        DESTINATION "${INSTALL_BUNDLE_LIB_DIR}"
+        COMPONENT Runtime)
 
-# Fully re-copy the assets directory on each build to avoid having stale files
-# from a previous install.
+# Recopiez entièrement le répertoire des assets à chaque build pour éviter d'avoir des fichiers
+# obsolètes provenant d'une installation précédente
 set(FLUTTER_ASSET_DIR_NAME "flutter_assets")
 install(CODE "
   file(REMOVE_RECURSE \"${INSTALL_BUNDLE_DATA_DIR}/${FLUTTER_ASSET_DIR_NAME}\")
   " COMPONENT Runtime)
 install(DIRECTORY "${PROJECT_BUILD_DIR}/${FLUTTER_ASSET_DIR_NAME}"
-  DESTINATION "${INSTALL_BUNDLE_DATA_DIR}" COMPONENT Runtime)
+        DESTINATION "${INSTALL_BUNDLE_DATA_DIR}" COMPONENT Runtime)
 
-# Install the AOT library on non-Debug builds only.
+# Installez la bibliothèque AOT uniquement pour les builds non-Debug
 install(FILES "${AOT_LIBRARY}" DESTINATION "${INSTALL_BUNDLE_DATA_DIR}"
-  CONFIGURATIONS Profile;Release
-  COMPONENT Runtime)
+        CONFIGURATIONS Profile;Release
+        COMPONENT Runtime)

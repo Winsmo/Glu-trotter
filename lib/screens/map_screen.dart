@@ -12,10 +12,10 @@ class MapPage extends StatefulWidget {
 
 class _MapPageState extends State<MapPage> {
   final MapController _mapController = MapController(); // Contrôleur pour la carte
-  final TextEditingController _searchController = TextEditingController(); // Contrôleur pour le champ de recherche
+  final TextEditingController _searchController = TextEditingController(); // Contrôleur pour la recherche
   LatLng _center = LatLng(48.8566, 2.3522); // Centre initial de la carte (Paris)
   bool _isLoading = true; // Indicateur de chargement
-  List<LatLng> _searchMarkers = []; // Liste des marqueurs pour les résultats de recherche
+  List<LatLng> _searchMarkers = []; // Liste des marqueurs de recherche
 
   @override
   void initState() {
@@ -23,9 +23,7 @@ class _MapPageState extends State<MapPage> {
     _getCurrentLocation(); // Obtenir la localisation au démarrage
   }
 
-  // Fonction pour obtenir la localisation actuelle
   Future<void> _getCurrentLocation() async {
-    // Vérifier les permissions
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -52,19 +50,16 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    // Obtenir la position actuelle
     Position position = await Geolocator.getCurrentPosition();
     setState(() {
-      _center = LatLng(position.latitude, position.longitude); // Mettre à jour le centre de la carte
-      _isLoading = false; // Fin du chargement
+      _center = LatLng(position.latitude, position.longitude);
+      _isLoading = false;
     });
-    _mapController.move(_center, 13.0); // Déplacer la carte vers la position actuelle
+    _mapController.move(_center, 13.0);
   }
 
-  // Fonction pour rechercher un lieu
   Future<void> _searchPlace(String query) async {
-    final String url =
-        'https://nominatim.openstreetmap.org/search?format=json&q=$query';
+    final String url = 'https://nominatim.openstreetmap.org/search?format=json&q=$query';
 
     try {
       final response = await http.get(Uri.parse(url));
@@ -77,15 +72,14 @@ class _MapPageState extends State<MapPage> {
                 double.parse(result['lat']),
                 double.parse(result['lon']),
               );
-            }).toList(); // Mettre à jour la liste des marqueurs de recherche
+            }).toList();
           });
 
-          // Déplacer la carte vers le premier résultat de la recherche
           final LatLng firstResult = LatLng(
             double.parse(results[0]['lat']),
             double.parse(results[0]['lon']),
           );
-          _mapController.move(firstResult, 13.0); // Correction ici
+          _mapController.move(firstResult, 13.0);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Lieu non trouvé')),
@@ -114,7 +108,6 @@ class _MapPageState extends State<MapPage> {
       ),
       body: Column(
         children: [
-          // Champ de recherche
           Padding(
             padding: const EdgeInsets.all(8.0),
             child: TextField(
@@ -124,44 +117,41 @@ class _MapPageState extends State<MapPage> {
                 suffixIcon: IconButton(
                   icon: Icon(Icons.search),
                   onPressed: () {
-                    _searchPlace(_searchController.text); // Lancer la recherche
+                    _searchPlace(_searchController.text);
                   },
                 ),
               ),
             ),
           ),
-          // Carte
           Expanded(
             child: _isLoading
-                ? Center(child: CircularProgressIndicator()) // Afficher un indicateur de chargement
+                ? Center(child: CircularProgressIndicator())
                 : FlutterMap(
-              mapController: _mapController, // Contrôleur de la carte
+              mapController: _mapController,
               options: MapOptions(
-                center: _center, // Centre de la carte
-                zoom: 13.0, // Niveau de zoom initial
-                minZoom: 5.0, // Zoom minimum pour éviter que la carte ne disparaisse
-                maxZoom: 18.0, // Zoom maximum pour éviter que la carte ne disparaisse
+                initialCenter: _center, // Correction ici
+                initialZoom: 13.0, // Correction ici
+                minZoom: 5.0,
+                maxZoom: 18.0,
               ),
               children: [
                 TileLayer(
                   urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                   userAgentPackageName: 'com.example.app',
                 ),
-                // Marqueur pour la position actuelle (point bleu)
                 MarkerLayer(
                   markers: [
                     Marker(
                       point: _center,
-                      builder: (context) => Icon(Icons.location_pin, color: Colors.blue, size: 40),
+                      child: Icon(Icons.location_pin, color: Colors.blue, size: 40),
                     ),
                   ],
                 ),
-                // Marqueurs pour les résultats de recherche (points verts)
                 MarkerLayer(
-                  markers: _searchMarkers.map((latLng) {
+                  markers: _searchMarkers.map<Marker>((latLng) {
                     return Marker(
                       point: latLng,
-                      builder: (context) => Icon(Icons.location_pin, color: Colors.green, size: 40),
+                      child: Icon(Icons.location_pin, color: Colors.green, size: 40),
                     );
                   }).toList(),
                 ),
